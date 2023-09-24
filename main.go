@@ -18,42 +18,21 @@ import (
 	"github.com/Tnze/go-mc/nbt"
 )
 
-type stringFlag struct {
-	set   bool
-	value string
-}
-
-func (sf *stringFlag) Set(x string) error {
-	sf.value = x
-	sf.set = true
-	return nil
-}
-
-func (sf *stringFlag) String() string {
-	return sf.value
-}
-
-var inputFolder stringFlag
-var outputFolder stringFlag
-
-func init() {
-	flag.Var(&inputFolder, "input", "the full link to the input folder")
-	flag.Var(&outputFolder, "output", "the name of the output folder you created")
-}
-
 func main() {
+	var inputFolder string
+	var outputFolder string
+	flag.StringVar(&inputFolder, "i", "", "the full link to the input folder")
+	flag.StringVar(&outputFolder, "o", "output", "the name of the output folder")
 	flag.Parse()
 
-	if !inputFolder.set {
-		fmt.Println("--input not set")
-		return
-	}
-	if !outputFolder.set {
-		fmt.Println("--output not set")
-		return
-	}
+	flag.VisitAll(func(f *flag.Flag) {
+		if f.Value.String() == "" {
+			fmt.Println(f.Name, "not set (see -h)")
+			os.Exit(0)
+		}
+	})
 
-	entries, err := os.ReadDir(inputFolder.value)
+	entries, err := os.ReadDir(inputFolder)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -61,7 +40,7 @@ func main() {
 	for _, e := range entries {
 		if strings.HasPrefix(e.Name(), "map_") && strings.HasSuffix(e.Name(), ".dat") {
 			// read data
-			filePath := filepath.Join(inputFolder.value, e.Name())
+			filePath := filepath.Join(inputFolder, e.Name())
 
 			mapdata := openFile(filePath)
 			data := mapdata["data"].(map[string]interface{})
@@ -80,7 +59,7 @@ func main() {
 			// save the image to a file
 			outputFileName := e.Name()[:len(e.Name())-4] + ".png"
 			currentDir, _ := os.Getwd()
-			outputFileLocation := filepath.Join(currentDir, outputFolder.value, outputFileName)
+			outputFileLocation := filepath.Join(currentDir, outputFolder, outputFileName)
 			outputFile, err := os.Create(outputFileLocation)
 			if err != nil {
 				fmt.Println("Error creating output file:", err)
