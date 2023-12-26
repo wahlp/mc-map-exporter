@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Tnze/go-mc/nbt"
@@ -40,46 +41,51 @@ func main() {
 
 	startTime := time.Now()
 
+	var wg sync.WaitGroup
 	for _, e := range entries {
 		if strings.HasPrefix(e.Name(), "map_") && strings.HasSuffix(e.Name(), ".dat") {
-			// read data
-			filePath := filepath.Join(inputFolder, e.Name())
+			wg.Add(1)
+			go func(entry os.DirEntry) {
+				defer wg.Done()
+				// read data
+				filePath := filepath.Join(inputFolder, entry.Name())
 
-			mapdata := openFile(filePath)
-			data := mapdata["data"].(map[string]interface{})
-			colors := data["colors"].([]uint8)
+				mapdata := openFile(filePath)
+				data := mapdata["data"].(map[string]interface{})
+				colors := data["colors"].([]uint8)
 
-			// create image
-			allColors := createAllColors(baseColors, multipliers)
+				// create image
+				allColors := createAllColors(baseColors, multipliers)
 
-			var pixels []Pixel
-			for _, c := range colors {
-				pixels = append(pixels, allColors[c])
-			}
+				var pixels []Pixel
+				for _, c := range colors {
+					pixels = append(pixels, allColors[c])
+				}
 
-			img := createImageFromPixels(pixels)
+				img := createImageFromPixels(pixels)
 
-			// save the image to a file
-			outputFileName := e.Name()[:len(e.Name())-4] + ".png"
-			currentDir, _ := os.Getwd()
-			outputFileLocation := filepath.Join(currentDir, outputFolder, outputFileName)
-			outputFile, err := os.Create(outputFileLocation)
-			if err != nil {
-				fmt.Println("Error creating output file:", err)
-				return
-			}
-			defer outputFile.Close()
+				// save the image to a file
+				outputFileName := entry.Name()[:len(entry.Name())-4] + ".png"
+				currentDir, _ := os.Getwd()
+				outputFileLocation := filepath.Join(currentDir, outputFolder, outputFileName)
+				outputFile, err := os.Create(outputFileLocation)
+				if err != nil {
+					fmt.Println("Error creating output file:", err)
+					return
+				}
+				defer outputFile.Close()
 
-			err = png.Encode(outputFile, img)
-			if err != nil {
-				fmt.Println("Error encoding PNG:", err)
-				return
-			}
+				err = png.Encode(outputFile, img)
+				if err != nil {
+					fmt.Println("Error encoding PNG:", err)
+					return
+				}
 
-			fmt.Println("Image saved:", outputFileName)
+				fmt.Println("Image saved:", outputFileName)
+			}(e)
 		}
 	}
-
+	wg.Wait()
 	elapsedTime := time.Since(startTime)
 	fmt.Printf("Total execution time: %s\n", elapsedTime)
 }
