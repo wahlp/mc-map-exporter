@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Tnze/go-mc/nbt"
 )
@@ -36,6 +37,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	startTime := time.Now()
 
 	for _, e := range entries {
 		if strings.HasPrefix(e.Name(), "map_") && strings.HasSuffix(e.Name(), ".dat") {
@@ -76,6 +79,9 @@ func main() {
 			fmt.Println("Image saved:", outputFileName)
 		}
 	}
+
+	elapsedTime := time.Since(startTime)
+	fmt.Printf("Total execution time: %s\n", elapsedTime)
 }
 
 type Pixel [4]uint8
