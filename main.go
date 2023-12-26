@@ -80,14 +80,12 @@ func main() {
 					fmt.Println("Error encoding PNG:", err)
 					return
 				}
-
-				fmt.Println("Image saved:", outputFileName)
 			}(e)
 		}
 	}
 	wg.Wait()
 	elapsedTime := time.Since(startTime)
-	fmt.Printf("Total execution time: %s\n", elapsedTime)
+	fmt.Println(len(entries), "maps exported in", elapsedTime)
 }
 
 type Pixel [4]uint8
