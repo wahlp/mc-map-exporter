@@ -40,6 +40,9 @@ func main() {
 	}
 
 	startTime := time.Now()
+
+	currentDir, _ := os.Getwd()
+	outputFolderFullPath := filepath.Join(currentDir, outputFolder)
 	allColors := createAllColors()
 
 	var wg sync.WaitGroup
@@ -65,8 +68,7 @@ func main() {
 
 				// save the image to a file
 				outputFileName := entry.Name()[:len(entry.Name())-4] + ".png"
-				currentDir, _ := os.Getwd()
-				outputFileLocation := filepath.Join(currentDir, outputFolder, outputFileName)
+				outputFileLocation := filepath.Join(outputFolderFullPath, outputFileName)
 				outputFile, err := os.Create(outputFileLocation)
 				if err != nil {
 					fmt.Println("Error creating output file:", err)
@@ -86,8 +88,7 @@ func main() {
 	elapsedTime := time.Since(startTime)
 	fmt.Println(len(entries), "maps exported in", elapsedTime)
 	
-	currentDir, _ := os.Getwd()
-	fmt.Println("output saved to", filepath.Join(currentDir, outputFolder))
+	fmt.Println("output saved to", outputFolderFullPath)
 }
 
 type Pixel [4]uint8
