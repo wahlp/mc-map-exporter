@@ -44,6 +44,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	
+	worldName, err := getWorldName(inputFolder)
+	outputFolderFullPath = filepath.Join(outputFolderFullPath, worldName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = createFolderIfNotExist(outputFolderFullPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	startTime := time.Now()
 	allColors := createAllColors()
@@ -89,7 +100,7 @@ func main() {
 	}
 	wg.Wait()
 	elapsedTime := time.Since(startTime)
-	fmt.Println(len(entries), "maps exported in", elapsedTime)
+	fmt.Println("exported", len(entries), "maps in", elapsedTime)
 	
 	fmt.Println("output saved to", outputFolderFullPath)
 }
@@ -101,12 +112,36 @@ func resolvePath(inputPath string) (string, error) {
 		return "", fmt.Errorf("error getting absolute path: %w", err)
 	}
 
-	// check if the file exists
-	if _, err := os.Stat(absPath); os.IsNotExist(err) {
-		return "", fmt.Errorf("file does not exist: %s", absPath)
+	return absPath, nil
+}
+
+func getWorldName(absPath string) (string, error) {
+	// Clean and split the path into components
+	cleanPath := filepath.Clean(absPath)
+	sections := strings.Split(cleanPath, string(filepath.Separator))
+
+	// Ensure there are at least two sections in the path
+	if len(sections) < 2 {
+		return "", fmt.Errorf("path does not have enough sections: %s", absPath)
 	}
 
-	return absPath, nil
+	// Return the second-last section
+	return sections[len(sections)-2], nil
+}
+
+func createFolderIfNotExist(folderPath string) error {
+	// Check if the folder exists
+	if _, err := os.Stat(folderPath); os.IsNotExist(err) {
+		// Create the folder if it does not exist
+		err := os.MkdirAll(folderPath, os.ModePerm)
+		if err != nil {
+			return fmt.Errorf("failed to create folder: %w", err)
+		}
+		fmt.Printf("folder created: %s\n", folderPath)
+	} else {
+		fmt.Printf("folder already exists: %s\n", folderPath)
+	}
+	return nil
 }
 
 type Pixel [4]uint8
