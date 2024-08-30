@@ -85,6 +85,9 @@ func main() {
 	wg.Wait()
 	elapsedTime := time.Since(startTime)
 	fmt.Println(len(entries), "maps exported in", elapsedTime)
+	
+	currentDir, _ := os.Getwd()
+	fmt.Println("output saved to", filepath.Join(currentDir, outputFolder))
 }
 
 type Pixel [4]uint8
