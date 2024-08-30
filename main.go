@@ -33,25 +33,19 @@ func main() {
 			os.Exit(0)
 		}
 	})
-
+	
+	// read files in input folder
 	entries, err := os.ReadDir(inputFolder)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// check that we can write to output folder
-	if _, err := os.Stat(outputFolder); err != nil {
-		if os.IsNotExist(err) {
-			log.Fatal(err)
-		} else {
-			log.Fatal(err)
-		}
+	
+	outputFolderFullPath, err := resolvePath(outputFolder)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	startTime := time.Now()
-
-	currentDir, _ := os.Getwd()
-	outputFolderFullPath := filepath.Join(currentDir, outputFolder)
 	allColors := createAllColors()
 
 	var wg sync.WaitGroup
@@ -98,6 +92,21 @@ func main() {
 	fmt.Println(len(entries), "maps exported in", elapsedTime)
 	
 	fmt.Println("output saved to", outputFolderFullPath)
+}
+
+func resolvePath(inputPath string) (string, error) {
+	// convert the input path to an absolute path
+	absPath, err := filepath.Abs(inputPath)
+	if err != nil {
+		return "", fmt.Errorf("error getting absolute path: %w", err)
+	}
+
+	// check if the file exists
+	if _, err := os.Stat(absPath); os.IsNotExist(err) {
+		return "", fmt.Errorf("file does not exist: %s", absPath)
+	}
+
+	return absPath, nil
 }
 
 type Pixel [4]uint8
