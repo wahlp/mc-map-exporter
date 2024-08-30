@@ -21,10 +21,12 @@ import (
 )
 
 func main() {
+	defaultOutputLocation := "output"
+
 	var inputFolder string
 	var outputFolder string
 	flag.StringVar(&inputFolder, "i", "", "the full link to the input folder")
-	flag.StringVar(&outputFolder, "o", "output", "the name of the output folder")
+	flag.StringVar(&outputFolder, "o", defaultOutputLocation, "the name of the output folder")
 	flag.Parse()
 
 	flag.VisitAll(func(f *flag.Flag) {
@@ -45,15 +47,25 @@ func main() {
 		log.Fatal(err)
 	}
 	
-	worldName, err := getWorldName(inputFolder)
-	outputFolderFullPath = filepath.Join(outputFolderFullPath, worldName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = createFolderIfNotExist(outputFolderFullPath)
-	if err != nil {
-		log.Fatal(err)
+	if outputFolder == defaultOutputLocation {
+		// choose path for subfolder using world name
+		worldName, err := getWorldName(inputFolder)
+		outputFolderFullPath = filepath.Join(outputFolderFullPath, worldName)
+		if err != nil {
+			log.Fatal(err)
+		}
+	
+		// make the subfolder
+		err = createFolderIfNotExist(outputFolderFullPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		// no subfolders or creating folders
+		// just ensure write access
+		if _, err := os.Stat(outputFolder); err != nil {
+			log.Fatal("Could not find the folder: ", outputFolder)
+		}
 	}
 
 	startTime := time.Now()
