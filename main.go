@@ -39,6 +39,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// check that we can write to output folder
+	if _, err := os.Stat(outputFolder); err != nil {
+		if os.IsNotExist(err) {
+			log.Fatal(err)
+		} else {
+			log.Fatal(err)
+		}
+	}
+
 	startTime := time.Now()
 
 	currentDir, _ := os.Getwd()
